@@ -1,0 +1,199 @@
+//===== rAthena Script =======================================
+//= Stylist npc
+//===== By: ==================================================
+//= AnnieRuru
+//= based on Euphy's version
+//===== Current Version: =====================================
+//= 2.0
+//===== Compatible With: ===================================== 
+//= rAthena 2020-10-23
+//===== Description: =========================================
+//= stylist script with no palette knowledge required !!
+//===== Topic ================================================
+alberta_in,67,141,3	script	Stylist	878,{
+	mes "[Stylist]";
+	mes "I'm a professional stylist";
+	mes "and I have to say I've been";
+	mes "blessed by this great talent!";
+	next;
+	if (select("Change style:End conversation") == 2) {
+		mes "[Stylist]";
+		mes "Are you saying you don't";
+		mes "like being stylish?";
+		mes "How is this possible!";
+		close;
+	}
+	mes "[Stylist]";
+	mes "Ah, I see that that you can";
+	mes "recognize genius when it is";
+	mes "right before you. Now, choose";
+	mes "a style you want a makeover.";
+	next;
+	@style = ( select( .npc_menu$ ) - 1 );
+	@style_value = getlook( .look_type[@style] );
+	if (@style > getarraysize(.npc_menu$) + 1) {
+		mes "[Stylist]";
+		mes "Everyone has the right to";
+		mes "be beautiful... I hope you ";
+		mes "find a style that suits you.";
+		close;
+	}
+	deletearray .@blacklist;
+	switch( @style ){
+		Case 0: .@blacklist$ = ","+getd( ".blacklist_hairstyle_"+Sex+"$" )+","; break;
+		Case 1: .@blacklist$ = ","+getd( ".blacklist_haircolor_"+Sex+"$" )+","; break;
+		Case 2: .@blacklist$ = ","+getd( ".blacklist_cloth_"+Sex+"$" )+","; break;
+		default: break;
+	}
+	mes "[Stylist]";
+	mes "Great! Please choose a "+.menu_name$[@style];
+	mes "from Style "+.min_style[@style]+" to Style "+.max_style[@style]+".";
+	next;
+	.@style_number = @style_value;
+	addtimer 1000,strnpcinfo(0)+"::OnPCLogoutEvent";
+	do{
+		.@removed = 0;
+		if( compare( .@blacklist$,","+.@style_number+"," ) ){
+			.@removed = 1;
+			// setlook .look_type[@style],.min_style[@style];
+		}else{
+			setlook .look_type[@style],.@style_number;
+		}
+		.@next = .@style_number + 1;
+		.@prev = .@style_number - 1;
+		if( .@next > .max_style[@style] ) .@next = .min_style[@style];
+		if( .@prev < .min_style[@style] ) .@prev = .max_style[@style];
+		
+		@select = prompt( (( .@backward )?"Backward":"Forward" )+" - [ ^777777Style "+(( .@backward )? .@prev:.@next )+"^000000 ]",
+					(( !.@backward )?"Backward":"Forward" )+" - [ ^777777Style "+(( !.@backward )? .@prev:.@next )+"^000000 ]",
+					"Jump to...",
+					"Revert Back",
+					( .@removed )?"":"^0055FFOkay, I want this "+.menu_name$[@style]+"^000000" );
+		if( @select == 2 ) .@backward = !.@backward;
+		switch( @select ){
+			Case 1:	
+			Case 2:
+				.@style_number = (( .@backward )? .@prev:.@next );
+				break;
+			Case 3:	
+				input .@style_number,.min_style[@style],.max_style[@style];
+				break;
+			Case 4:
+				.@style_number = @style_value;
+				break;
+			Case 5:
+				if( @style_value == .@style_number ){
+					mes "[Stylist]";
+					mes "Hmm, your "+.menu_name$[@style];
+					mes "is still fine, so there's";
+					mes "no need to dye it the same";
+					mes "color again, if that's what";
+					mes "you're worried about.";
+				} else if (.menu_name$[@style] == "Hair Style") {
+					if (.@style_number > 23)
+						setarray .@itemreq[0],6290,1;
+					else {
+						setarray .@itemreq[0],973,3,974,3,1020,100,7152,100,1060,100,901,100,1094,100;
+						.@zenycost = 99800;
+					}
+				} else if (.menu_name$[@style] == "Hair Color") {
+					if (.@style_number > 8)
+						setarray .@itemreq[0],6289,1;
+					else {
+						if (.@style_number == 1) .@item = 976;
+						else if (.@style_number == 2) .@item = 981;
+						else if (.@style_number == 3) .@item = 980;
+						else if (.@style_number == 4) .@item = 979;
+						else if (.@style_number == 5) .@item = 978;
+						else if (.@style_number == 6) .@item = 982;
+						else if (.@style_number == 7) .@item = 983;
+						else if (.@style_number == 8) .@item = 975;
+						setarray .@itemreq[0],.@item,1;
+						.@zenycost = 1000;
+					}
+				} else if (.menu_name$[@style] == "Cloth Color") {
+					.@zenycost = 250000;
+					if (.@style_number > 3)
+						setarray .@itemreq[0],6287,1;
+					else {
+						setarray .@itemreq[0],6046,1;
+					}
+				}
+				for(set .@i,0; .@i<getarraysize(.@itemreq); set .@i,.@i+2) {
+					if (countitem(.@itemreq[.@i]) < .@itemreq[.@i+1])
+						set .@items, 1;
+					else
+						set .@items, 2;
+				}
+				if (.@items == 1 || Zeny < .@zenycost) {
+					mes "[Stylist]";
+					mes "If you've already decided";
+					mes "what hairstyle you'd like,";
+					mes "please have my service charge";
+					mes "ready, as well as the materials";
+					mes "I will need in performing this";
+					mes "service, okay? Please bring...";
+					next;
+					mes "[Stylist]";
+					for(set .@i,0; .@i<getarraysize(.@itemreq); set .@i,.@i+2) {
+						mes "^3355FF"+.@itemreq[.@i+1]+" "+getitemname(.@itemreq[.@i])+"^000000";
+					}
+					if (.@zenycost)
+						mes "and ^3355FF"+callfunc("F_InsertComma",.@zenycost)+" Zeny^000000.";
+				} else {
+					mes "[Stylist]";
+					mes "Well, we're all finished!";
+					mes "And my, oh my, you look even";
+					mes "more fabulous that I thought";
+					mes "you would! Oh, I can't believe";
+					if (Sex == SEX_MALE) {
+						mes "how tough and elegant you are~";
+						mes "So ruggedly manly and handsome!";
+					}
+					else {
+						mes "how graceful and elegant you";
+						mes "look! Absolutely gorgeous!";
+					}
+					for(set .@i,0; .@i<getarraysize(.@itemreq); set .@i,.@i+2) {
+						delitem .@itemreq[.@i],.@itemreq[.@i+1];
+					}
+					if (.@zenycost)
+						set Zeny, Zeny-.@zenycost;
+					@style_value = .@style_number;
+				}
+			default:
+				setlook .look_type[@style],@style_value;
+				break;
+		}
+	} while ( @select != 5 && @select != 255 );
+	@select = 0;
+	deltimer strnpcinfo(0)+"::OnPCLogoutEvent";
+
+OnPCLogoutEvent:
+	if( @select )
+		setlook .look_type[@style],@style_value;
+	end;
+	
+OnInit:
+	// NPC Mode ( Bitmask )
+	//	1 - Enable Hairstyle
+	//	2 - Enable Hair Color
+	//	4 - Enable Cloth Color
+	.npc_mode = 7;
+	
+	// Menu Name
+	setarray .menu_name$,
+		"Hair Style",
+		"Hair Color",
+		"Cloth Color";
+
+	// Dont edit
+	setarray .min_style,getbattleflag( "min_hair_style" ),1,1;
+	setarray .max_style,getbattleflag( "max_hair_style" ),getbattleflag( "max_hair_color" ),getbattleflag( "max_cloth_color" );
+	.menu_size = getarraysize( .menu_name$ );
+	setarray .look_type,LOOK_HAIR,LOOK_HAIR_COLOR,LOOK_CLOTHES_COLOR;
+	for( .npc_menu$ = ""; .@i < .menu_size; .@i++ )
+		.npc_menu$ = .npc_menu$ + ( ( .npc_mode & ( 1 << .@i ) )? .menu_name$[.@i]:"" ) +":";
+	.npc_menu$ = .npc_menu$ + "Cancel";
+	end;
+}

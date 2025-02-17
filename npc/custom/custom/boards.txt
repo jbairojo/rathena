@@ -1,0 +1,224 @@
+//===== rAthena Script =======================================
+//= Mission Board Quests
+//===== By: ==================================================
+//= Chilly
+//===== Current Version: =====================================
+//= 1.5
+//===== Compatible With: =====================================
+//= rAthena Project
+//===== Description: =========================================
+//= Repetable Quests
+//===== Additional Comments: =================================
+//= 1.0 First Version. [Chilly]
+//= 1.1 Some little improvements here and there. [Masao]
+//= 1.2 Optimized. [Euphy]
+//= 1.3 Updated to match the official script. [Euphy]
+//= 1.4 Added support to Para_Team_Mark_ in Eden Group. [Ragno]
+//= 1.5 Added use of F_HasEdenGroupMark function. [Ragno]
+//============================================================
+
+-	script	Mission Board::mbq	857,{
+	mes "[Mission Board]";
+	mes "You've stumbled upon what appears";
+	mes "to be a bulletin board with wanted ads.";
+	mes "Take a closer look?";
+	next;
+	switch(select("Level 1~11 Missions:Level 12~25 Missions:Level 26~40 Missions:Level 41~55 Missions:Level 56~70 Missions:Level 71~90 Missions:Level 91~99 Missions:Cancel")) {
+	case 1:
+		callsub L_Quest,1,1,11,25,5,0,20;
+		break;
+	case 2:
+		callsub L_Quest,2,12,25,25,5,0,40;
+		break;
+	case 3:
+		callsub L_Quest,3,26,40,40,5,0,0;
+		break;
+	case 4:
+		callsub L_Quest,4,41,55,40,10,0,0;
+		break;
+	case 5:
+		callsub L_Quest,5,56,70,50,10,0,0;
+		break;
+	case 6:
+		callsub L_Quest,6,71,90,75,10,0,0;
+		break;
+	case 7:
+		callsub L_Quest,7,91,99,75,20,10,0;
+		break;
+	case 8:
+		mes "[Mission Board]";
+		mes "There is nothing else to do.";
+		close;
+	}
+	end;
+
+//callsub L_Quest,<tier>,<min level>,<max level>,<mob amount>,<bronze amount>,<silver amount>,<potion amount>;
+L_Quest:
+	if (getarg(0) == 1) {
+		setarray .@mobid[0],1002,1008,1007,1049,1047,1010,1011,1009,1012,1048;
+		setarray .@quest1[0],70401,70402,70403,70404,70405,70406,70407,70408,70409,70410;
+		setarray .@item[0],938,915,949,916,935,1068,935,917,918,915;
+	} else if (getarg(0) == 2) {
+		setarray .@mobid[0],1051,1076,1004,1052,1107,1161,1005,1053,1070,1015;
+		setarray .@quest1[0],70411,70412,70413,70414,70415,70416,70417,70418,70419,70420;
+		setarray .@item[0],955,932,939,940,582,938,913,955,955,957;
+	} else if (getarg(0) == 3) {
+		setarray .@mobid[0],1174,1018,1056,1128,1066,1019,1116,1064,1141,1030;
+		setarray .@quest1[0],70421,70422,70423,70424,70425,70426,70427,70428,70429,70430;
+		setarray .@item[0],1013,924,945,947,960,925,7032,959,938,926;
+	} else if (getarg(0) == 4) {
+		setarray .@mobid[0],1164,1110,1045,1500,1277,1495,1140,1069,1403,1271;
+		setarray .@quest1[0],70431,70432,70433,70434,70435,70436,70437,70438,70439,70440;
+		setarray .@item[0],958,1021,956,7186,1019,7201,1045,963,7126,7003;
+	} else if (getarg(0) == 5) {
+		setarray .@mobid[0],1680,1497,1776,1369,1687,1383,1197,1368,1149,1493;
+		setarray .@quest1[0],70441,70442,70443,70444,70445,70446,70447,70448,70449,70450;
+		setarray .@item[0],7115,7189,7066,7101,903,7006,930,1033,941,7197;
+	} else if (getarg(0) == 6) {
+		setarray .@mobid[0],1216,1378,1372,1163,1682,1193,1154,1988,1278,1505;
+		setarray .@quest1[0],70451,70452,70453,70454,70455,70456,70457,70458,70459,70460;
+		setarray .@item[0],7013,7001,7106,7054,7319,1095,7121,6041,7054,7214;
+	} else if (getarg(0) == 7) {
+		setarray .@mobid[0],2069,1365,1309,1505,1995,1148,1297,1310,1783,1777;
+		setarray .@quest1[0],70461,70462,70463,70464,70465,70466,70467,70468,70469,70470;
+		setarray .@item[0],950,7095,953,7219,7100,1048,930,941,7564,7066;
+	}
+	mes "[Mission Board]";
+	mes "You may now view the list of";
+	mes "hunting missions on this board.";
+	next;
+	for(set .@i,0; .@i<getarraysize(.@mobid); .@i++)
+		.@menu$ = .@menu$ + getmonsterinfo(.@mobid[.@i],MOB_NAME) + "^000000 Hunting:";
+	.@menu$ = .@menu$ + "Cancel";
+	.@select = (select(.@menu$)) - 1;
+	if (.@select > getarraysize(.@mobid)) {
+		mes "[Mission Board]";
+		mes "There is nothing else to do.";
+		close;
+	}
+	.@quest2 = (.@quest1[.@select])+100;
+	.@playtime = checkquest(.@quest2,PLAYTIME);
+	.@hunting = checkquest(.@quest1[.@select],HUNTING);
+	if (.@playtime == 0 || .@playtime == 1) {
+		mes "[Mission Board]";
+		mes "You need to wait 30 minutes";
+		mes "before taking this mission again.";
+		close;
+	}
+	if (.@hunting == 0 || .@hunting == 1) {
+		mes "[Mission Board]";
+		mes "Have you finished hunting all "+getarg(3)+"  "+getmonsterinfo(.@mobid[.@select],MOB_NAME)+" monsters yet?";
+	} else if (.@hunting == 2) {
+		.@Zeny = getmonsterinfo(.@mobid[.@select],MOB_LV) * 300;
+		.@bExp = getmonsterinfo(.@mobid[.@select],MOB_BASEEXP) * getarg(3);
+		.@jExp = getmonsterinfo(.@mobid[.@select],MOB_JOBEXP) * getarg(3);
+		.@BaseExp = .@bExp;
+		.@JobExp = .@jExp;
+		if (countitem(.@item[.@select]) >= getarg(3)) {
+			mes "[Mission Board]";
+			mes "You have also collected";
+			mes getarg(3)+" "+getitemname(.@item[.@select])+".";
+			mes "Do you want to turn them in?";
+			next;
+			if(select("Yes, turn them in.:No, I'll keep 'em.") == 1) {
+				.@BaseExp += .@bExp / 2;
+				.@JobExp += .@jExp / 2;
+				delitem .@item[.@select],getarg(3);
+			}
+		}
+		mes "- Mission Completed! -";
+		mes "You are rewarded with:";
+		if (Zeny + .@Zeny <= MAX_ZENY) {
+			Zeny += .@Zeny;
+			mes "~ "+callfunc("F_InsertComma",.@Zeny)+" Zeny";
+		}
+		if (eaclass()&(EAJL_UPPER)) {
+			.@BaseExp += .@bExp * 2;
+			.@JobExp += .@jExp * 2;
+		}
+		getexp .@BaseExp,.@JobExp;
+		if (gettime(4) == 1 || gettime(4) == 6 || gettime(4) == 0) {
+			.@BaseExp = (.@BaseExp * 300) / 100;
+			.@JobExp = (.@JobExp * 300) / 100;
+		}
+		mes "~ "+callfunc("F_InsertComma",.@BaseExp)+" Base EXP";
+		mes "~ "+callfunc("F_InsertComma",.@JobExp)+" Job EXP";
+		if (Bronze_Coins == 200)
+			.@Coin = 0;
+		else if (Bronze_Coins + getarg(4) >= 200) {
+			.@resamt = 200 - Bronze_Coins;
+			.@Coin = .@resamt;
+			Bronze_Coins = 200;
+		} else {
+			.@Coin = getarg(4);
+			Bronze_Coins += .@Coin;
+		}
+		if (getarg(6)) {
+			getitem 569,getarg(6);	//Novice_Potion
+			mes "~ "+callfunc("F_InsertPlural",getarg(6),getitemname(569));
+		}
+		if (.@Coin) {
+			getitem 6734,.@Coin; //Bronze_Coin
+			mes "~ "+callfunc("F_InsertPlural",.@Coin,getitemname(6734));
+		}
+		erasequest .@quest1[.@select];
+		setquest .@quest2;
+	} else {
+		if (BaseLevel < getarg(1) || (BaseLevel > getarg(2) && getarg(2))) {
+			mes "[Mission Board]";
+			mes "This mission is only available";
+			mes "to adventurers who are between the";
+			mes "levels "+getarg(1)+"-"+getarg(2)+".";
+			close;;
+		}
+		mes "[Mission Board]";
+		mes "Hunt "+getarg(3)+" "+getmonsterinfo(.@mobid[.@select],MOB_NAME)+" monsters.";
+		mes "Gathering "+getarg(3)+" "+getitemname(.@item[.@select]);
+		mes "when turning in this mission";
+		mes "rewards you with additional EXP.";
+		next;
+		if(select("I'll hunt them.:No thanks.") == 2) {
+			mes "[Mission Board]";
+			mes "There is nothing else to do.";
+			close;
+		}
+		mes "[Mission Board]";
+		mes "When you have completed the mission, post it on this board and collect your rewards.";
+		if (.@playtime > -1) erasequest .@quest2;
+		setquest .@quest1[.@select];
+	}
+	close;
+
+OnInit:
+	if (!$week_reset) {
+		query_sql "SELECT REPLACE(SUBDATE(CURDATE(), INTERVAL (DAYOFWEEK(CURDATE()) -1) DAY), '-', '')", $week_reset; // TRICK !! how to save the 1st sunday once the script installed
+		end;
+	}
+OnSun0000:
+	query_sql "SELECT DATEDIFF(CURDATE(), '"+ $week_reset +"')/7", .this_week_index;
+	if (.this_week_index == $week_index) end;
+	query_sql("UPDATE `char_reg_num` SET `value` = '0' WHERE `key` = 'Bronze_Coins'");
+	$week_index = .this_week_index;
+	end;
+}
+izlude,108,145,5	duplicate(mbq)	Mission Board#1	857
+payon,148,89,5	duplicate(mbq)	Mission Board#2	857
+prontera,136,225,5	duplicate(mbq)	Mission Board#3	857
+geffen,57,96,3	duplicate(mbq)	Mission Board#4	857
+alberta,99,144,5	duplicate(mbq)	Mission Board#5	857
+morocc,148,86,5	duplicate(mbq)	Mission Board#6	857
+aldebaran,190,61,5	duplicate(mbq)	Mission Board#7	857
+xmas,118,126,5	duplicate(mbq)	Mission Board#8	857
+comodo,104,136,3	duplicate(mbq)	Mission Board#9	857
+umbala,132,132,3	duplicate(mbq)	Mission Board#10	857
+niflheim,213,202,3	duplicate(mbq)	Mission Board#11	857
+yuno,180,145,5	duplicate(mbq)	Mission Board#12	857
+lighthalzen,194,161,5	duplicate(mbq)	Mission Board#13	857
+einbroch,224,215,5	duplicate(mbq)	Mission Board#14	857
+hugel,96,168,5	duplicate(mbq)	Mission Board#15	857
+rachel,87,73,3	duplicate(mbq)	Mission Board#16	857
+veins,226,154,3	duplicate(mbq)	Mission Board#17	857
+manuk,301,137,3	duplicate(mbq)	Mission Board#18	857
+dicastes01,140,111,3	duplicate(mbq)	Mission Board#19	857
+splendide,204,240,3	duplicate(mbq)	Mission Board#20	857
+mora,98,110,5	duplicate(mbq)	Mission Board#21	857
