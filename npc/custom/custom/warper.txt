@@ -1,0 +1,731 @@
+//===== rAthena Script ============================================
+//= Quest Warper Script
+//===== By: =======================================================
+//= DZeroX, Darkchild, Neouni
+//===== Current Version: ==========================================
+//= 2.3
+//===== Compatible With: ==========================================
+//= rAthena Project
+//===== Description: ==============================================
+//= Warper that works only after locations are unlocked.
+//===== Additional Comments: ======================================
+//= 1.0 - NPCs created
+//= 1.1 - Add Dungeons by sturm
+//= 1.2 - Add All char in account unlocked by ace_killer
+//= 1.3 - Add new 7 towns and 7 dungeons by escoteiro
+// - Correct bug jawaii town by escoteiro
+// - Remove some excessive warpras by escoteiro
+//= 1.4 - Rewrite of the Warpa system [Neouni]
+// - Corrected some bugs caused by autoconverting the old script
+//= 1.4a - Rewrite of menu to be custom for each player [Neouni]
+// - Dungeon listing rewrite
+// - Town listing rewrite
+// - GameMaster can Customise Main menu
+//= 1.4b - Pricing round [Neouni]
+// - GM menu added for pricing
+// - Town Warp pricing tags added
+// - Dungeon Warp pricing tags added
+//= 1.5 - storage functions pricing [Neouni]
+// - storage pricing added
+// - kafra points setting added
+// - kafra storage code security added
+// - Healing scripts pricing added
+// - Heal Part script added
+//= 1.6 - Dungeon warp [Neouni] (beta only)
+// - added option to add a extra fee for going down deeper into dungeon
+// partly by rebuilding the dungeon warping into variable menu's
+//= 1.6a - alot of fixes for beta release [Neouni] (public release)
+// - fixed syntax problems
+// - fixed missing pyramid gats in @DGat$ array
+// - removed the culver level 5 that didn't exist
+//= 1.7 - Readability of Dungeon menu building increased [Neouni]
+// - Thanatos Tower & Luoyang Dungeon added
+//= 1.8 - changed around unlock variables [Neouni]
+// - Moved warp variables to mark what you have unlocked to an binary array in login based permanent variable
+// (warp variables are saved in login database, so all charservers have these unlocked)
+// - Town Warp unlock array max 21/(unknown max) items used instead of max account #variables 32 !
+// - Dungeon Warp unlock array 28/(unknown max) items used instead of max account #variables 32 !
+// - (max login ##variables = 16, i used 3)
+// - old variables are cleared on next save
+// - Extra Variable clear added for every character, just in case (request by Terces)
+//= 1.8a - Show amount of users on map [Neouni]
+//= 1.8b - Small typo fixed in stampcard script [Neouni]
+//= 1.9 - Making it more edit friendly [Neouni]
+// - Made Dungeon warp arrays more readable & editable (QWS_Darray)
+// - Made town warp arrays more readable & editable (QWS_Tarray)
+//= 2.0 - Special Warp menu added [Neouni]
+// - when all towns and dungeons are collected a new option on the main menu will show
+// - it will only show when you setup the mapname of the warp !
+//= 2.0a - Dungeon Level Limit & Split dungeon fees
+// - Limits dungeon based on Depth, access special setup menu thru GM-Menu
+// - Dungeon fees split up based on  Basic , Advanced & Overseas
+// - Old Dungeon fee system removed, all dungeon fees now set to 0
+//= 2.0b - Special warpname menu option name bug fixed
+//= 2.1 - Updated names to fall within retrictions. [L0ne_W0lf]
+//= 2.2 - #kafra_code is now stored as is. [brianluau]
+//= 2.3 - Added new town maps, cleanup, and removed pre-1.8 backwards fix. [Euphy]
+//=================================================================
+
+//========================Function=&=Script========================
+
+-	script	Warper#quest	-1,{
+function Go;
+	.@itemid = 6735;
+	cutin "kafra_do01", 2;
+	mes "[Kafra Warper]";
+	mes "Welcome to Kafra Services.";
+	mes "Our staff is always working";
+	mes "to surpass your expactations";
+	mes "for quality service.";
+	mes "So how may I assist you today?";
+	next;
+
+menu
+	"Last Warp [^777777"+lastpick$+"^000000]",-,
+	"Non-Kafra Towns",L_town,
+	"Dungeons",L_dungeon,
+	"Cancel",L_end;
+
+	mes "[Kafra Warper]";
+	if (lastwarp$ == "") {
+		mes "You haven't unlocked";
+		mes "any warp points yet.";
+		close3;
+	} else if (!countitem(.@itemid)) {
+		mes "I'm sorry, but you do not have a";
+		mes callfunc("itemlink",.@itemid)+"  for this service.";
+		mes "Please check back again.";
+		close3;
+	}
+	mes "Have a safe journey.";
+	delitem .@itemid,1;
+	warp lastwarp$,lastwarpx,lastwarpy;
+	end;
+
+function Go {
+	if (!countitem(.@itemid)) {
+		mes "[Kafra Warper]";
+		mes "I'm sorry, but you do not have a";
+		mes callfunc("itemlink",.@itemid)+" for this service.";
+		mes "Please check back again.";
+		close3;
+	}
+	delitem .@itemid,1;
+	set lastwarp$, getarg(0);
+	set lastwarpx, getarg(1,0);
+	set lastwarpy, getarg(2,0);
+	set lastpick$, getarg(3);
+	warp getarg(0),getarg(1,0),getarg(2,0);
+	end;
+}
+
+// --------------------------------------------------
+//Towns
+// --------------------------------------------------
+
+L_town:
+	mes "[Kafra Warper]";
+	mes "Please choose your destination.";
+	next;
+	callfunc "QWS_Tarray";
+	freeloop(1);
+	set .@menu$,"";
+	for(set .@i,0; .@i<35; set .@i,.@i+1)	// Expected maximum is 35
+		set .@menu$,.@menu$+@Tmenulist$[.@i]+":";
+	freeloop(0);
+	set @TWMenu,select(.@menu$);
+
+	if (@Tmenuref[@TWMenu-1] == 57005) goto L_end; // 57005='dead' in hex
+
+	set .@x, @pTXcoords[@Tmenuref[@TWMenu-1]];
+	set .@y, @pTYcoords[@Tmenuref[@TWMenu-1]];
+	Go(@pTmap$[@Tmenuref[@TWMenu-1]],.@x,.@y,@pTmenuitems$[@Tmenuref[@TWMenu-1]]);
+	end;
+
+// --------------------------------------------------
+//Dungeons
+// --------------------------------------------------
+
+L_dungeon:
+	mes "[Kafra Warper]";
+	mes "Please choose your destination.";
+	next;
+	callfunc "QWS_Darray";
+	freeloop(1);
+	set .@menu$,"";
+	for(set .@i,0; .@i<35; set .@i,.@i+1)	// Expected maximum is 35
+		set .@menu$,.@menu$+@Dmenulist$[.@i]+":";
+	freeloop(0);
+	set @DWMenu,select(.@menu$);
+
+	if (@Dmenuref[@DWMenu-1] == 57005) goto L_end; // 57005='dead' in hex
+
+	set .@x, @DXcoords[@Dmenuref[@DWMenu-1]];
+	set .@y, @DYcoords[@Dmenuref[@DWMenu-1]];
+	Go(@DGat$[@Dmenuref[@DWMenu-1]],.@x,.@y,@pDmenuitems$[@Dmenuref[@DWMenu-1]]);
+
+L_end:
+	mes "[Kafra Warper]";
+	mes "The Kafra Corporation is always";
+	mes "always striving to provide the best";
+	mes "services for our customers.";
+	close3;
+}
+
+//======================Town=Menu=Array============================
+
+function	script	QWS_Tarray	{
+	function QWS_Make_Town_Menu;
+
+	set @Ti,0; // loop counter
+	set @Tj,0; // menu lines counter
+
+//----------------Lasagna
+	setarray @pTmenuitems$[@Ti], "Lasagna";
+
+	setarray @pTmap$[@Ti], "lasagna";
+	setarray @pTXcoords[@Ti], 193;
+	setarray @pTYcoords[@Ti], 182;
+
+	QWS_Make_Town_Menu 1;
+
+//----------------Niflheim
+	setarray @pTmenuitems$[@Ti], "Niflheim";
+
+	setarray @pTmap$[@Ti], "nif_in";
+	setarray @pTXcoords[@Ti], 20;
+	setarray @pTYcoords[@Ti], 15;
+
+	QWS_Make_Town_Menu 0;
+
+//----------------Cancel
+	setarray @pTmenuitems$[@Ti], "Cancel";
+	setarray @pTprice[@Ti], 0;
+
+	set @Tmenulist$[@Tj],@pTmenuitems$[@Ti];
+	set @Tmenuref[@Tj],57005; // 57005='dead' in hex
+	return;
+
+
+//----------------Make Town Menu Function
+
+function	QWS_Make_Town_Menu	{
+	set @temptownmenubin,1;
+	if (getarg(0) == 0) goto menu_item;
+	set @templooptownmenu,0;
+	do {
+		set @temptownmenubin, @temptownmenubin * 2;
+		set @templooptownmenu, @templooptownmenu + 1;
+		}while (getarg(0) > @templooptownmenu);
+// check marker and make menu item
+menu_item:
+	if ((@temptownmenubin & QWS_T_GO) != @temptownmenubin) {
+		set @Ti,@Ti+1;
+		return;
+	}
+	if (@pTprice[@Ti] == 0)&&($QW_MapUserShow == 0) set @Tmenulist$[@Tj], @pTmenuitems$[@Ti];
+	set @Tmenuref[@Tj],@Ti;
+	set @Tj,@Tj+1;
+	set @Ti,@Ti+1;
+	return;
+}
+}
+
+//====================Dungeon=Menu=Arrays==========================
+
+function	script	QWS_Darray	{
+	function QWS_Make_Dungeon_Menu;
+
+	set @Di,0;
+	set @Dj,0;
+
+//----------------ABYSS LAKE
+	setarray @pDmenuitems$[@Di], "Abyss Lake";
+
+	setarray @DGat$[@Di], "hu_fild05";
+	setarray @DXcoords[@Di], 170;
+	setarray @DYcoords[@Di], 305;
+
+	QWS_Make_Dungeon_Menu 0;
+
+//----------------AMATSU DUNGEON
+	setarray @pDmenuitems$[@Di], "Amatsu Dungeon";
+
+	setarray @DGat$[@Di], "ama_in02";
+	setarray @DXcoords[@Di], 118;
+	setarray @DYcoords[@Di], 181;
+
+	QWS_Make_Dungeon_Menu 1;
+
+//----------------ANT HELL
+	setarray @pDmenuitems$[@Di], "Ant Hell";
+
+	setarray @DGat$[@Di], "moc_fild04";
+	setarray @DXcoords[@Di], 209;
+	setarray @DYcoords[@Di], 328;
+
+	QWS_Make_Dungeon_Menu 2;
+
+//----------------AYOTHAYA
+	setarray @pDmenuitems$[@Di], "Ayothaya Dungeon";
+
+	setarray @DGat$[@Di], "ayo_fild01";
+	setarray @DXcoords[@Di], 125;
+	setarray @DYcoords[@Di], 199;
+
+	QWS_Make_Dungeon_Menu 3;
+
+//----------------LIGHTHALZEN BIO LAB
+	setarray @pDmenuitems$[@Di], "Bio Laboratory";
+
+	setarray @DGat$[@Di], "lhz_in01";
+	setarray @DXcoords[@Di], 34;
+	setarray @DYcoords[@Di], 224;
+
+	QWS_Make_Dungeon_Menu 4;
+
+//----------------BYALAN
+	setarray @pDmenuitems$[@Di], "Byalan Island";
+
+	setarray @DGat$[@Di], "izlu2dun";
+	setarray @DXcoords[@Di], 107;
+	setarray @DYcoords[@Di], 91;
+
+	QWS_Make_Dungeon_Menu 5;
+
+//----------------DRAGON NEST
+	setarray @pDmenuitems$[@Di], "Dragon's Nest";
+
+	setarray @DGat$[@Di], "lasa_fild02";
+	setarray @DXcoords[@Di], 344;
+	setarray @DYcoords[@Di], 243;
+
+	QWS_Make_Dungeon_Menu 33;
+
+//----------------EINBECH DUNGEON
+	setarray @pDmenuitems$[@Di], "Einbech Mine";
+
+	setarray @DGat$[@Di], "einbech";
+	setarray @DXcoords[@Di], 138;
+	setarray @DYcoords[@Di], 245;
+
+	QWS_Make_Dungeon_Menu 6;
+
+//----------------GEFFEN DUNGEON
+	setarray @pDmenuitems$[@Di], "Geffen Tower";
+
+	setarray @DGat$[@Di], "gef_tower";
+	setarray @DXcoords[@Di], 153;
+	setarray @DYcoords[@Di], 36;
+
+	QWS_Make_Dungeon_Menu 7;
+
+//----------------GLAST HEIM
+	setarray @pDmenuitems$[@Di], "Glast Heim Castle";
+
+	setarray @DGat$[@Di], "glast_01";
+	setarray @DXcoords[@Di], 200;
+	setarray @DYcoords[@Di], 289;
+
+	QWS_Make_Dungeon_Menu 8;
+
+//----------------
+	setarray @pDmenuitems$[@Di], "Glast Heim Cave";
+
+	setarray @DGat$[@Di], "gl_sew04";
+	setarray @DXcoords[@Di], 98;
+	setarray @DYcoords[@Di], 79;
+
+	QWS_Make_Dungeon_Menu 9;
+
+//----------------
+	setarray @pDmenuitems$[@Di], "Glast Heim Chivalry";
+
+	setarray @DGat$[@Di], "glast_01";
+	setarray @DXcoords[@Di], 73;
+	setarray @DYcoords[@Di], 193;
+
+	QWS_Make_Dungeon_Menu 10;
+
+//----------------
+	setarray @pDmenuitems$[@Di], "Glast Heim Church";
+
+	setarray @DGat$[@Di], "glast_01";
+	setarray @DXcoords[@Di], 200;
+	setarray @DYcoords[@Di], 130;
+
+	QWS_Make_Dungeon_Menu 11;
+
+//----------------
+	setarray @pDmenuitems$[@Di], "Glast Heim Culvert";
+
+	setarray @DGat$[@Di], "gl_sew02";
+	setarray @DXcoords[@Di], 289;
+	setarray @DYcoords[@Di], 294;
+
+	QWS_Make_Dungeon_Menu 12;
+
+//----------------
+	setarray @pDmenuitems$[@Di], "Glast Heim Staircase";
+
+	setarray @DGat$[@Di], "glast_01";
+	setarray @DXcoords[@Di], 58;
+	setarray @DYcoords[@Di], 108;
+
+	QWS_Make_Dungeon_Menu 13;
+
+//----------------KUNLUN DUNGEON
+	setarray @pDmenuitems$[@Di], "Gonryun Dungeon";
+
+	setarray @DGat$[@Di], "gonryun";
+	setarray @DXcoords[@Di], 160;
+	setarray @DYcoords[@Di], 92;
+
+	QWS_Make_Dungeon_Menu 14;
+
+//----------------HIDDEN DUNGEON
+	setarray @pDmenuitems$[@Di], "Hidden Temple";
+
+	setarray @DGat$[@Di], "prt_fild01";
+	setarray @DXcoords[@Di], 136;
+	setarray @DYcoords[@Di], 365;
+
+	QWS_Make_Dungeon_Menu 15;
+
+//----------------JUPEROS CAVE
+	setarray @pDmenuitems$[@Di], "Juperos Ruins";
+
+	setarray @DGat$[@Di], "jupe_cave";
+	setarray @DXcoords[@Di], 32;
+	setarray @DYcoords[@Di], 52;
+
+	QWS_Make_Dungeon_Menu 16;
+
+//----------------KIEL DUNGEON
+	setarray @pDmenuitems$[@Di], "Kiel Robot Factory";
+
+	setarray @DGat$[@Di], "yuno_fild08";
+	setarray @DXcoords[@Di], 74;
+	setarray @DYcoords[@Di], 174;
+
+	QWS_Make_Dungeon_Menu 17;
+
+//----------------LOUYANG DUNGEON
+	setarray @pDmenuitems$[@Di], "Luoyang Dungeon";
+
+	setarray @DGat$[@Di], "louyang";
+	setarray @DXcoords[@Di], 43;
+	setarray @DYcoords[@Di], 272;
+
+	QWS_Make_Dungeon_Menu 18;
+
+//----------------MAGMA DUNGEON
+	setarray @pDmenuitems$[@Di], "Magma Dungeon";
+
+	setarray @DGat$[@Di], "yuno_fild03";
+	setarray @DXcoords[@Di], 39;
+	setarray @DYcoords[@Di], 139;
+
+	QWS_Make_Dungeon_Menu 19;
+
+//----------------MJOLNIR DEAD PIT
+	setarray @pDmenuitems$[@Di], "Mjolnir Dead Pit";
+
+	setarray @DGat$[@Di], "mjolnir_02";
+	setarray @DXcoords[@Di], 81;
+	setarray @DYcoords[@Di], 358;
+
+	QWS_Make_Dungeon_Menu 20;
+
+//----------------PYRAMIDS
+	setarray @pDmenuitems$[@Di], "Morocc Pyramid";
+
+	setarray @DGat$[@Di], "moc_ruins";
+	setarray @DXcoords[@Di], 65;
+	setarray @DYcoords[@Di], 161;
+
+	QWS_Make_Dungeon_Menu 25;
+
+//----------------ODIN TEMPLE
+	setarray @pDmenuitems$[@Di], "Odin Temple";
+
+	setarray @DGat$[@Di], "hugel";
+	setarray @DXcoords[@Di], 202;
+	setarray @DYcoords[@Di], 109;
+
+	QWS_Make_Dungeon_Menu 21;
+
+//----------------ORC DUNGEON
+	setarray @pDmenuitems$[@Di], "Orc Dungeon";
+
+	setarray @DGat$[@Di], "in_orcs01";
+	setarray @DXcoords[@Di], 30;
+	setarray @DYcoords[@Di], 173;
+
+	QWS_Make_Dungeon_Menu 22;
+
+//----------------PAYON DUNGEON
+	setarray @pDmenuitems$[@Di], "Payon Cave";
+
+	setarray @DGat$[@Di], "pay_arche";
+	setarray @DXcoords[@Di], 41;
+	setarray @DYcoords[@Di], 128;
+
+	QWS_Make_Dungeon_Menu 23;
+
+//----------------CULVERT
+	setarray @pDmenuitems$[@Di], "Prontera Culvert";
+
+	setarray @DGat$[@Di], "prt_fild05";
+	setarray @DXcoords[@Di], 274;
+	setarray @DYcoords[@Di], 208;
+
+	QWS_Make_Dungeon_Menu 24;
+
+//----------------SPHINX
+	setarray @pDmenuitems$[@Di], "Sphinx Dungeon";
+
+	setarray @DGat$[@Di], "moc_fild19";
+	setarray @DXcoords[@Di], 107;
+	setarray @DYcoords[@Di], 99;
+
+	QWS_Make_Dungeon_Menu 26;
+
+//----------------SUNKEN SHIP
+	setarray @pDmenuitems$[@Di], "Sunken Ship";
+
+	setarray @DGat$[@Di], "alb2trea";
+	setarray @DXcoords[@Di], 75;
+	setarray @DYcoords[@Di], 99;
+
+	QWS_Make_Dungeon_Menu 27;
+
+//----------------THANATOS TOWER
+	setarray @pDmenuitems$[@Di], "Thanatos Tower";
+
+	setarray @DGat$[@Di], "hu_fild01";
+	setarray @DXcoords[@Di], 140;
+	setarray @DYcoords[@Di], 158;
+
+	QWS_Make_Dungeon_Menu 28;
+
+//----------------TOY FACTORY
+	setarray @pDmenuitems$[@Di], "Toy Factory";
+
+	setarray @DGat$[@Di], "xmas";
+	setarray @DXcoords[@Di], 144;
+	setarray @DYcoords[@Di], 309;
+
+	QWS_Make_Dungeon_Menu 29;
+
+//----------------TURTLE ISTLAND
+	setarray @pDmenuitems$[@Di], "Turtle Island";
+
+	setarray @DGat$[@Di], "tur_dun01";
+	setarray @DXcoords[@Di], 154;
+	setarray @DYcoords[@Di], 236;
+
+	QWS_Make_Dungeon_Menu 30;
+
+//----------------UMBALA DUNGEON
+	setarray @pDmenuitems$[@Di], "Umbala Dungeon";
+
+	setarray @DGat$[@Di], "umbala";
+	setarray @DXcoords[@Di], 113;
+	setarray @DYcoords[@Di], 283;
+
+	QWS_Make_Dungeon_Menu 31;
+
+//----------------YGGDRASIL TREE
+	setarray @pDmenuitems$[@Di], "Yggdrasil Tree";
+
+	setarray @DGat$[@Di], "um_dun02";
+	setarray @DXcoords[@Di], 126;
+	setarray @DYcoords[@Di], 143;
+
+	QWS_Make_Dungeon_Menu 32;
+
+//----------------Cancel
+	setarray @pDmenuitems$[@Di], "Cancel";
+	setarray @pDprice[@Di], 0;
+
+	set @Dmenulist$[@Dj],@pDmenuitems$[@Di];
+	set @Dmenuref[@Dj],57005; // 57005='dead' in hex
+	return;
+
+
+//----------------Make Dungeon Menu Function
+
+function	QWS_Make_Dungeon_Menu	{
+	set @tempdungeonmenubin,1;
+	if (getarg(0) == 0) goto menu_item;
+	set @temploopdungeonmenu,0;
+	do {
+		set @tempdungeonmenubin, @tempdungeonmenubin * 2;
+		set @temploopdungeonmenu, @temploopdungeonmenu + 1;
+		}while (getarg(0) > @temploopdungeonmenu);
+// check marker and make menu item
+menu_item:
+	if ((@tempdungeonmenubin & QWS_D_GO) != @tempdungeonmenubin) {
+		set @Di,@Di+1;
+		return;
+	}
+	if (@pDprice[@Di] == 0)&&($QW_MapUserShow == 0) set @Dmenulist$[@Dj], @pDmenuitems$[@Di];
+	set @Dmenuref[@Dj],@Di;
+	set @Dj,@Dj+1;
+	set @Di,@Di+1;
+	return;
+}
+}
+
+//================Dungeon=Warpras=That=Only=Unlock=================
+
+function	script	QWS_Dungeon_Warp	{
+	function QWS_D_getbin;
+	function QWS_D_setbin;
+
+	if ((QWS_D_getbin(getarg(0)) == 0) && (getarg(1) != "")) {
+		specialeffect2 EF_FLOWERLEAF;
+		message strcharinfo(0),getarg(1)+" has been unlocked.";
+		QWS_D_setbin(getarg(0));
+		return;
+	} else if (QWS_D_getbin(getarg(0)) == 1) {
+		end;
+	} else
+		debugmes "QWS_Dungeon_Warp error, improper syntax?";
+	return;
+
+
+function	QWS_D_setbin	{
+	set @tempsetbindata,1;
+	if (getarg(0) == 0) goto binset;
+	set @temploopsetbin,0;
+	do {
+		set @tempsetbindata, @tempsetbindata * 2;
+		set @temploopsetbin, @temploopsetbin + 1;
+	} while (getarg(0) > @temploopsetbin);
+binset:
+	set QWS_D_GO,(QWS_D_GO | @tempsetbindata);
+	return;
+}
+
+function	QWS_D_getbin	{
+	set @tempgetbindata,1;
+	if (getarg(0) == 0) goto binget;
+	set @temploopgetbin,0;
+	do {
+		set @tempgetbindata, @tempgetbindata * 2;
+		set @temploopgetbin, @temploopgetbin + 1;
+	} while (getarg(0) > @temploopgetbin);
+binget:
+	if ((@tempgetbindata & QWS_D_GO) == @tempgetbindata) return 1;
+	return 0;
+}
+}
+
+//================Town=Warpras=That=Only=Unlock=================
+
+function	script	QWS_Town_Warp	{
+	function QWS_T_getbin;
+	function QWS_T_setbin;
+
+	if ((QWS_T_getbin(getarg(0)) == 0) && (getarg(1) != "")) {
+		specialeffect2 EF_FLOWERLEAF;
+		message strcharinfo(0),getarg(1)+" has been unlocked.";
+		QWS_T_setbin(getarg(0));
+		return;
+	} else if (QWS_T_getbin(getarg(0)) == 1) {
+		end;
+	} else
+		debugmes "QWS_Town_Warp error, improper syntax ?";
+	return;
+
+function	QWS_T_setbin	{
+	set @tempsetbindata,1;
+	if (getarg(0) == 0) goto binset;
+	set @temploopsetbin,0;
+	do {
+		set @tempsetbindata, @tempsetbindata * 2;
+		set @temploopsetbin, @temploopsetbin + 1;
+	} while (getarg(0) > @temploopsetbin);
+binset:
+	set QWS_T_GO,(QWS_T_GO | @tempsetbindata);
+	return;
+}
+
+function	QWS_T_getbin	{
+	set @tempgetbindata,1;
+	if (getarg(0) == 0) goto binget;
+	set @temploopgetbin,0;
+	do {
+		set @tempgetbindata, @tempgetbindata * 2;
+		set @temploopgetbin, @temploopgetbin + 1;
+	} while (getarg(0) > @temploopgetbin);
+binget:
+	if ((@tempgetbindata & QWS_T_GO) == @tempgetbindata) return 1;
+	return 0;
+}
+}
+
+//==========================Warpras================================
+alberta,122,59,3	duplicate(Warper#quest)	Kafra Warper#alb	4_F_DRKAFRA01
+aldebaran,146,119,4	duplicate(Warper#quest)	Kafra Warper#alde	4_F_DRKAFRA01
+amatsu,102,152,5	duplicate(Warper#quest)	Kafra Warper#ama	4_F_DRKAFRA01
+ayothaya,209,169,6	duplicate(Warper#quest)	Kafra Warper#ayo	4_F_DRKAFRA01
+comodo,197,149,3	duplicate(Warper#quest)	Kafra Warper#com	4_F_DRKAFRA01
+einbech,183,132,6	duplicate(Warper#quest)	Kafra Warper#einbe	4_F_DRKAFRA01
+einbroch,245,205,5	duplicate(Warper#quest)	Kafra Warper#einbr	4_F_DRKAFRA01
+geffen,122,62,7	duplicate(Warper#quest)	Kafra Warper#gef	4_F_DRKAFRA01
+gonryun,162,122,3	duplicate(Warper#quest)	Kafra Warper#gon	4_F_DRKAFRA01
+hugel,85,168,5	duplicate(Warper#quest)	Kafra Warper#hug	4_F_DRKAFRA01
+izlude,134,90,3	duplicate(Warper#quest)	Kafra Warper#izl	4_F_DRKAFRA01
+lighthalzen,166,100,3	duplicate(Warper#quest)	Kafra Warper#lhz	4_F_DRKAFRA01
+louyang,207,104,5	duplicate(Warper#quest)	Kafra Warper#lou	4_F_DRKAFRA01
+xmas,151,134,4	duplicate(Warper#quest)	Kafra Warper#xmas	4_F_DRKAFRA01
+morocc,159,97,4	duplicate(Warper#quest)	Kafra Warper#mor	4_F_DRKAFRA01
+moscovia,226,191,3	duplicate(Warper#quest)	Kafra Warper#mos	4_F_DRKAFRA01
+niflheim,205,179,3	duplicate(Warper#quest)	Kafra Warper#nif	4_F_DRKAFRA01
+payon,183,104,3	duplicate(Warper#quest)	Kafra Warper#pay	4_F_DRKAFRA01
+prontera,147,174,5	duplicate(Warper#quest)	Kafra Warper#prt	4_F_DRKAFRA01
+rachel,107,136,5	duplicate(Warper#quest)	Kafra Warper#rac	4_F_DRKAFRA01
+umbala,89,159,3	duplicate(Warper#quest)	Kafra Warper#umb	4_F_DRKAFRA01
+veins,206,126,5	duplicate(Warper#quest)	Kafra Warper#ve	4_F_DRKAFRA01
+yuno,149,187,4	duplicate(Warper#quest)	Kafra Warper#yuno	4_F_DRKAFRA01
+
+//========================Town Warps===============================
+nif_in,17,17,0	script	Warp Point#nif	OBJ_A,{ callfunc "QWS_Town_Warp",0,"Niflheim"; end; }
+
+//=======================Dungeon Warps=============================
+hu_fild05,174,302,0	script	Warp Point#0	OBJ_A,{ callfunc "QWS_Dungeon_Warp",0,"Abyss Lake"; end; }
+ama_in02,115,184,0	script	Warp Point#1	OBJ_A,{ callfunc "QWS_Dungeon_Warp",1,"Amatsu Dungeon"; end; }
+moc_fild04,213,330,0	script	Warp Point#2	OBJ_A,{ callfunc "QWS_Dungeon_Warp",2,"Ant Hell"; end; }
+ayo_fild01,131,198,0	script	Warp Point#3	OBJ_A,{ callfunc "QWS_Dungeon_Warp",3,"Ayothaya Dungeon"; end; }
+lhz_in01,36,220,0	script	Warp Point#4	OBJ_A,{ callfunc "QWS_Dungeon_Warp",4,"Bio Laboratory"; end; }
+izlu2dun,102,90,0	script	Warp Point#5	OBJ_A,{ callfunc "QWS_Dungeon_Warp",5,"Byalan Island"; end; }
+einbech,133,248,0	script	Warp Point#6	OBJ_A,{ callfunc "QWS_Dungeon_Warp",6,"Einbech Mine"; end; }
+gef_tower,156,33,0	script	Warp Point#7	OBJ_A,{ callfunc "QWS_Dungeon_Warp",7,"Geffen Tower"; end; }
+glast_01,196,291,0	script	Warp Point#8	OBJ_A,{ callfunc "QWS_Dungeon_Warp",8,"Glast Heim Castle"; end; }
+gl_sew04,98,82,0	script	Warp Point#9	OBJ_A,{ callfunc "QWS_Dungeon_Warp",9,"Glast Heim Cave"; end; }
+glast_01,79,187,0	script	Warp Point#10	OBJ_A,{ callfunc "QWS_Dungeon_Warp",10,"Glast Heim Chivalry"; end; }
+glast_01,204,134,0	script	Warp Point#11	OBJ_A,{ callfunc "QWS_Dungeon_Warp",11,"Glast Heim Church"; end; }
+gl_sew02,292,297,0	script	Warp Point#12	OBJ_A,{ callfunc "QWS_Dungeon_Warp",12,"Glast Heim Culvert"; end; }
+glast_01,54,103,0	script	Warp Point#13	OBJ_A,{ callfunc "QWS_Dungeon_Warp",13,"Glast Heim Staircase"; end; }
+gonryun,164,196,0	script	Warp Point#14	OBJ_A,{ callfunc "QWS_Dungeon_Warp",14,"Gonryun Dungeon"; end; }
+prt_fild01,140,367,0	script	Warp Point#15	OBJ_A,{ callfunc "QWS_Dungeon_Warp",15,"Hidden Temple"; end; }
+jupe_cave,29,55,0	script	Warp Point#16	OBJ_A,{ callfunc "QWS_Dungeon_Warp",16,"Juperos Ruins"; end; }
+yuno_fild08,75,169,0	script	Warp Point#17	OBJ_A,{ callfunc "QWS_Dungeon_Warp",17,"Kiel Robot Factory"; end; }
+louyang,39,275,0	script	Warp Point#18	OBJ_A,{ callfunc "QWS_Dungeon_Warp",18,"Luoyang Dungeon"; end; }
+yuno_fild03,37,143,0	script	Warp Point#19	OBJ_A,{ callfunc "QWS_Dungeon_Warp",19,"Magma Dungeon"; end; }
+mjolnir_02,76,362,0	script	Warp Point#20	OBJ_A,{ callfunc "QWS_Dungeon_Warp",20,"Mjolnir Dead Pit"; end; }
+hugel,206,110,0	script	Warp Point#21	OBJ_A,{ callfunc "QWS_Dungeon_Warp",21,"Odin Temple"; end; }
+in_orcs01,35,175,0	script	Warp Point#22	OBJ_A,{ callfunc "QWS_Dungeon_Warp",22,"Orc Dungeon"; end; }
+pay_arche,39,128,0	script	Warp Point#23	OBJ_A,{ callfunc "QWS_Dungeon_Warp",23,"Payon Cave"; end; }
+prt_fild05,267,208,0	script	Warp Point#24	OBJ_A,{ callfunc "QWS_Dungeon_Warp",24,"Prontera Culvert"; end; }
+moc_ruins,63,164,0	script	Warp Point#25	OBJ_A,{ callfunc "QWS_Dungeon_Warp",25,"Morocc Pyramid"; end; }
+moc_fild19,107,97,0	script	Warp Point#26	OBJ_A,{ callfunc "QWS_Dungeon_Warp",26,"Sphinx Dungeon"; end; }
+alb2trea,77,102,0	script	Warp Point#27	OBJ_A,{ callfunc "QWS_Dungeon_Warp",27,"Sunken Ship"; end; }
+hu_fild01,138,163,0	script	Warp Point#28	OBJ_A,{ callfunc "QWS_Dungeon_Warp",28,"Thanatos Tower"; end; }
+xmas,149,311,0	script	Warp Point#29	OBJ_A,{ callfunc "QWS_Dungeon_Warp",29,"Toy Factory"; end; }
+tur_dun01,159,241,0	script	Warp Point#30	OBJ_A,{ callfunc "QWS_Dungeon_Warp",30,"Turtle Island"; end; }
+umbala,109,287,0	script	Warp Point#31	OBJ_A,{ callfunc "QWS_Dungeon_Warp",31,"Umbala Dungeon"; end; }
+um_dun02,129,146,0	script	Warp Point#32	OBJ_A,{ callfunc "QWS_Dungeon_Warp",32,"Yggdrasil Tree"; end; }

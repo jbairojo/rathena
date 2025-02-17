@@ -140,6 +140,40 @@ function	script	F_ClearGarbage	{
 //////////////////////////////////////////////////////////////////////////////////
 function	script	Job_Change	{
 	jobchange getarg(0),Upper;
+	if (job_novice_q > 0)
+		set job_novice_q,0;
+	if (!Job_Up) {
+		switch (BaseClass) {
+		case Job_Swordman:
+			getitem 1104,1; //Falchion
+			break;
+		case Job_Mage:
+			getitem 1601,1; //Rod
+			break;
+		case Job_Archer:
+			getitem 1704,1; //Composite_Bow
+			break;
+		case Job_Acolyte:
+			getitem 1504,1; //Mace
+			break;
+		case Job_Merchant:
+			getitem 1351,1; //Battle_Axe
+			break;
+		case Job_Thief:
+			getitem 1207,1; //Main_Gauche
+			break;
+		default:
+			break;
+		}
+		getitem 6734,50; //Bronze_Coin+
+		set Job_Up,1;
+	} else if (Job_Up == 1) {
+		if (JobLevel == 50)
+			getitem 6734,100;
+		else
+			getitem 6734,50;
+		set Job_Up,2;
+	}
 //	logmes "CLASS CHANGE: " +strcharinfo(0)+ " become a "+jobname(Class);
 	return;
 }

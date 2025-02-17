@@ -1,0 +1,101 @@
+//======================================================================================
+// Player Check
+//======================================================================================
+-	script	PCheck	-1,{
+OnInit:
+	.npc_name$ = strnpcinfo(3);
+	end;
+
+OnTimer:
+	@strnpctimer++;
+	switch ( @strnpctimer ) {
+		default:
+			goto On_Loop;
+		case 60:
+			@strnpctimer = -1;
+			deltimer .npc_name$+"::OnTimer";
+			goto On_Loop;
+	}
+
+OnPCLoginEvent:
+	if (gettime(4) == 5 || gettime(4) == 6 || gettime(4) == 0) {
+		dispbottom "EXP and Drop rates are increased.",0x00FF00;
+	}
+	if (ismounting() && !countitem(12622))
+		setmounting();
+
+On_Loop:
+	for (.@q = 70501; .@q <= 70570; .@q++) {
+		if (checkquest(.@q,PLAYTIME) == 2) {
+			erasequest .@q;
+		}
+	}
+	if ( @strnpctimer < 60 )
+		addtimer 1000,.npc_name$+"::OnTimer";
+	end;
+}
+
+//======================================================================================
+// PVE Rates
+//======================================================================================
+-	script	WeekendGrind	-1,{
+OnInit:
+	setarray .exp_rate$[0],
+		"base_exp_rate", getbattleflag("base_exp_rate"),
+		"job_exp_rate", getbattleflag("job_exp_rate"),
+		"mvp_exp_rate", getbattleflag("mvp_exp_rate"),
+		"quest_exp_rate", getbattleflag("quest_exp_rate");
+	setarray .item_rate$[0],
+		"item_rate_common", getbattleflag("item_rate_common"),
+		"item_rate_heal", getbattleflag("item_rate_heal"),
+		"item_rate_use", getbattleflag("item_rate_use"),
+		"item_rate_equip", getbattleflag("item_rate_equip"),
+		"item_rate_card", getbattleflag("item_rate_card");
+	callsub(S_DropInject,0);
+	if (gettime(4) != 1 && gettime(4) != 6 && gettime(4) != 0) end;
+
+OnFri0000:
+	if (!.active)
+		callsub(S_ChangeRates,1);
+	announce "Level Up! Event has started.",bc_all,0x00FFFF;
+
+OnMinute00:
+	if (gettime(4) == 1 || gettime(4) == 6 || gettime(4) == 0) {
+		announce "Level Up! Event \\ EXP Rate +50% \\ Drop Rate +25%",bc_all,0x00FFFF;
+	}
+	end;
+
+OnMon0000:
+	callsub(S_ChangeRates,0);
+	announce "Level Up! Event has ended.",bc_all,0x00FF00;
+	end;
+
+S_ChangeRates:
+	set .@erate, getarraysize(.exp_rate$);
+	for (set .@i, 0; .@i < .@erate; set .@i, .@i + 2) {
+		if (getarg(0) == 1)
+			setbattleflag .exp_rate$[.@i], atoi(.exp_rate$[.@i + 1]) + (atoi(.exp_rate$[.@i + 1]) * 50 / 100);
+	}
+	set .@irate, getarraysize(.item_rate$);
+	for (set .@i, 0; .@i < .@irate; set .@i, .@i + 2) {
+		if (getarg(0) == 1)
+			setbattleflag .item_rate$[.@i], atoi(.item_rate$[.@i + 1]) + (atoi(.item_rate$[.@i + 1]) * 25 / 100);
+	}
+	atcommand "@reloadmobdb";
+	callsub(S_DropInject,getarg(0));
+	return;
+	
+S_DropInject:
+	query_sql("SELECT `ID` FROM `mob_db` WHERE base_exp > 0 AND job_exp > 0;", .@mob_ids);
+	.@len = getarraysize(.@mob_ids);
+	freeloop(1);
+	if (getarg(0) == 1)
+		.@rate = 625;
+	else
+		.@rate = 500;
+	for(.@a = 0; .@a < .@len; .@a++) {
+		addmonsterdrop .@mob_ids[.@a],6734,.@rate;
+	}
+	freeloop(0);
+	return;
+}

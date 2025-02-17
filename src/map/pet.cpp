@@ -617,7 +617,7 @@ int16 pet_get_card3_intimacy( int intimacy ){
 	}else if( intimacy < PET_INTIMATE_LOYAL ){
 		// Cordial
 		return ( 4 << 1 );
-	}else if( intimacy <= PET_INTIMATE_MAX ){
+	}else if( intimacy >= PET_INTIMATE_LOYAL ){
 		// Loyal
 		return ( 5 << 1 );
 	}else{
@@ -677,7 +677,7 @@ bool pet_create_egg(map_session_data *sd, t_itemid item_id)
 		return false; // Inventory full
 
 	sd->catch_target_class = pet->class_;
-	intif_create_pet(sd->status.account_id, sd->status.char_id, pet->class_, mdb->lv, pet->EggID, 0, pet->intimate, 100, 0, 1, mdb->jname.c_str());
+	intif_create_pet(sd->status.account_id, sd->status.char_id, pet->class_, mdb->lv, pet->EggID, 0, pet->intimate, 10, 0, 1, mdb->jname.c_str());
 
 	return true;
 }
@@ -845,7 +845,7 @@ static TIMER_FUNC(pet_hungry){
 
 	pd->pet_hungry_timer = INVALID_TIMER;
 
-	if (pd->pet.intimate <= PET_INTIMATE_NONE)
+	if (pd->pet.intimate == PET_INTIMATE_MAX)
 		return 1; //You lost the pet already, the rest is irrelevant.
 
 	std::shared_ptr<s_pet_db> pet_db_ptr = pd->get_pet_db();
@@ -1322,7 +1322,7 @@ int pet_catch_process2(map_session_data* sd, int target_id)
 
 		std::shared_ptr<s_mob_db> mdb = mob_db.find(pet->class_);
 
-		intif_create_pet(sd->status.account_id, sd->status.char_id, pet->class_, mdb->lv, pet->EggID, 0, pet->intimate, 100, 0, 1, mdb->jname.c_str());
+		intif_create_pet(sd->status.account_id, sd->status.char_id, pet->class_, mdb->lv, pet->EggID, 0, pet->intimate, 10, 0, 1, mdb->jname.c_str());
 	} else {
 		clif_pet_roulette(sd,0);
 		sd->catch_target_class = PET_CATCH_FAIL;
@@ -1615,6 +1615,7 @@ int pet_food(map_session_data *sd, struct pet_data *pd)
 
 	pc_delitem(sd,i,1,0,0,LOG_TYPE_CONSUME);
 
+<<<<<<< Updated upstream
 	if (pd->pet.hungry > PET_HUNGRY_SATISFIED) {
 		pet_set_intimate(pd, pd->pet.intimate + pet_db_ptr->r_full);
 		if (pd->pet.intimate <= PET_INTIMATE_NONE) {
@@ -1624,6 +1625,8 @@ int pet_food(map_session_data *sd, struct pet_data *pd)
 		}
 	}
 	else {
+=======
+>>>>>>> Stashed changes
 		if( battle_config.pet_friendly_rate != 100 )
 			k = (pet_db_ptr->r_hungry * battle_config.pet_friendly_rate) / 100;
 		else
@@ -1635,15 +1638,12 @@ int pet_food(map_session_data *sd, struct pet_data *pd)
 		}
 
 		pet_set_intimate(pd, pd->pet.intimate + k);
-	}
 
 	status_calc_pet(pd,SCO_NONE);
-	pd->pet.hungry = min(pd->pet.hungry + pet_db_ptr->hunger_increase, PET_HUNGRY_STUFFED);
+	pd->pet.hungry = pd->pet.intimate / 10;
 
 	if( pd->pet.hungry > 100 )
 		pd->pet.hungry = 100;
-
-	log_feeding(sd, LOG_FEED_PET, pet_db_ptr->FoodID);
 
 	clif_send_petdata(sd,pd,2,pd->pet.hungry);
 	clif_send_petdata(sd,pd,1,pd->pet.intimate);

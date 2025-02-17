@@ -1,0 +1,77 @@
+// Author: _Okuz_
+// Version: 1.0.2 - 20:40 14/10/2016
+-	script	FREvent_1	-1,{
+
+OnInit:
+	// Setup the rates you want to double here...
+	setarray .server_conf$[0],
+					"base_exp_rate", getbattleflag("base_exp_rate"), 
+					"job_exp_rate", getbattleflag("job_exp_rate"),
+					"item_rate_equip", getbattleflag("item_rate_equip");
+
+	// To force the event to run even if you have to shutdown your server for some reason...
+	if (gettime(4) != 5 && gettime(4) != 6 && gettime(4) != 0) end;
+
+OnFri0000:
+	// start double rates on Friday 00:00
+	if (!.active)
+		callsub(S_changeRates, 200);
+	end;
+
+OnMon0000:
+	// stop double rates on Monday 00:00
+	callsub(S_changeRates, 0);
+	end;
+
+// Arg(0): mult
+S_changeRates:
+	set .@size, getarraysize(.server_conf$);
+	for (set .@i, 0; .@i < .@size; set .@i, .@i + 2) {
+		setbattleflag .server_conf$[.@i], atoi(.server_conf$[.@i + 1]) + getarg(0);
+	}
+	set .active, !.active;
+	return;
+}
+
+// Author: _Okuz_
+// Version: 1.0.2 - 20:40 14/10/2016
+-	script	FREvent_2	-1,{
+
+OnPCLoginEvent:
+	if(gettime(4) == 5 || gettime(4) == 6 || gettime(4) == 0) {
+		announce "-- 7x/7x/7x Event has started!! -- ",bc_all,0x00FFFF;
+	}
+
+OnInit:
+	// Setup the rates you want to double here...
+	setarray .server_conf$[0],
+					"item_rate_common", getbattleflag("item_rate_common"),
+					"item_rate_heal", getbattleflag("item_rate_heal"), 
+					"item_rate_use", getbattleflag("item_rate_use"), 
+					"item_rate_card", getbattleflag("item_rate_card");
+
+	// To force the event to run even if you have to shutdown your server for some reason...
+	if (gettime(4) != 5 && gettime(4) != 6 && gettime(4) != 0) end;
+
+OnFri0000:
+	// start double rates on Friday 00:00
+	if (!.active)
+		callsub(S_changeRates, 400);
+	end;
+
+OnMon0000:
+	// stop double rates on Monday 00:00
+	callsub(S_changeRates, 0);
+	end;
+
+// Arg(0): mult
+S_changeRates:
+	set .@size, getarraysize(.server_conf$);
+	for (set .@i, 0; .@i < .@size; set .@i, .@i + 2) {
+		setbattleflag .server_conf$[.@i], atoi(.server_conf$[.@i + 1]) + getarg(0);
+	}
+	set .active, !.active;
+	atcommand "@reloadmobdb";
+	announce "-- 7x/7x/7x Event " + (.active ? "has started!!" : "has ended!!") + " -- ",bc_all,0x00FFFF;
+	return;
+}

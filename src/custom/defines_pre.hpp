@@ -9,6 +9,9 @@
  * For detailed guidance on these check http://rathena.org/wiki/SRC/config/
  **/
 
-
+// Custom Settings
+// A 2021-11-17aRagexeRE of newer client is recommended.
+#define PACKETVER 20220406
+//#define PACKETVER_RE
 
 #endif /* CONFIG_CUSTOM_DEFINES_PRE_HPP */

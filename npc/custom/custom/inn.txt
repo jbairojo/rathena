@@ -1,0 +1,13 @@
+//======================== Comodo ====================================
+cmd_in01,117,124,1	script	Inn Employee#Anok	53,{
+
+	callfunc "F_InnMaid","[Employee Anok]","Comodo Inn","cmd_in01",113,125;
+	warp "cmd_in01",127,132; end;
+}
+
+//======================== Juno ====================================
+yuno_in01,33,179,4	script	Inn Employee#Tyla	53,{
+
+	callfunc "F_InnMaid","[Employee Tyla]","Vandt's Pub & Inn","yuno_in01",34,174;
+	warp "yuno_in01",109,174; end;
+}

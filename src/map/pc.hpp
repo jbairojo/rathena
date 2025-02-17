@@ -440,6 +440,7 @@ public:
 		bool mail_writing; // Whether the player is currently writing a mail in RODEX or not
 		bool cashshop_open;
 		bool sale_open;
+		bool arealoot;
 		bool stylist_open;
 		bool barter_open;
 		bool barter_extended_open;

@@ -5122,9 +5122,6 @@ void status_calc_regen(struct block_list *bl, struct status_data *status, struct
 		sregen = regen->sregen;
 
 		val = 0;
-		if( (skill=pc_checkskill(sd,SM_RECOVERY)) > 0 )
-			val += skill*5 + skill*status->max_hp/500;
-
 		if (sc && sc->count) {
 			if (sc->getSCE(SC_INCREASE_MAXHP))
 				val += val * sc->getSCE(SC_INCREASE_MAXHP)->val2 / 100;
@@ -5153,11 +5150,16 @@ void status_calc_regen(struct block_list *bl, struct status_data *status, struct
 		sregen = regen->ssregen;
 
 		val = 0;
+		if( (skill=pc_checkskill(sd,SM_RECOVERY)) > 0 )
+			val += skill*5 + skill*status->max_hp/500;
+
 		if( (skill=pc_checkskill(sd,MO_SPIRITSRECOVERY)) > 0 )
 			val += skill*4 + skill*status->max_hp/500;
 
 		if( (skill=pc_checkskill(sd,TK_HPTIME)) > 0 && sd->state.rest )
 			val += skill*30 + skill*status->max_hp/500;
+
+		val += status->max_hp*3/100;
 		sregen->hp = cap_value(val, 0, SHRT_MAX);
 
 		val = 0;
@@ -5168,6 +5170,8 @@ void status_calc_regen(struct block_list *bl, struct status_data *status, struct
 		}
 		if( (skill=pc_checkskill(sd,MO_SPIRITSRECOVERY)) > 0 )
 			val += skill*2 + skill*status->max_sp/500;
+
+		val += status->max_sp*3/100;
 		sregen->sp = cap_value(val, 0, SHRT_MAX);
 	}
 
@@ -15081,28 +15085,34 @@ static int status_natural_heal(struct block_list* bl, va_list args)
 		(vd = status_get_viewdata(bl)) && vd->dead_sit == 2)
 	{ // Apply sitting regen bonus.
 		sregen = regen->ssregen;
-		if(flag&(RGN_SHP)) { // Sitting HP regen
+		if(flag&(RGN_SHP) && !regen->state.overweight) { // Sitting HP regen
 			rate = (int)(natural_heal_diff_tick * (sregen->rate.hp / 100.));
+<<<<<<< Updated upstream
 			if (regen->state.overweight)
 				rate >>= 1; // Half as fast when overweight.
+=======
+>>>>>>> Stashed changes
 			sregen->tick.hp += rate;
-			while(sregen->tick.hp >= (unsigned int)battle_config.natural_heal_skill_interval) {
-				sregen->tick.hp -= battle_config.natural_heal_skill_interval;
+			while(sregen->tick.hp >= 5000) {
+				sregen->tick.hp -= 1000;
 				if(status_heal(bl, sregen->hp, 0, 3) < sregen->hp) { // Full
-					flag &= ~RGN_SHP;
+					flag &= ~(RGN_HP|RGN_SHP);
 					break;
 				}
 			}
 		}
-		if(flag&(RGN_SSP)) { // Sitting SP regen
+		if(flag&(RGN_SSP) && !regen->state.overweight) { // Sitting SP regen
 			rate = (int)(natural_heal_diff_tick * (sregen->rate.sp / 100.));
+<<<<<<< Updated upstream
 			if (regen->state.overweight)
 				rate >>= 1; // Half as fast when overweight.
+=======
+>>>>>>> Stashed changes
 			sregen->tick.sp += rate;
-			while(sregen->tick.sp >= (unsigned int)battle_config.natural_heal_skill_interval) {
-				sregen->tick.sp -= battle_config.natural_heal_skill_interval;
+			while(sregen->tick.sp >= 5000) {
+				sregen->tick.sp -= 1000;
 				if(status_heal(bl, 0, sregen->sp, 3) < sregen->sp) { // Full
-					flag &= ~RGN_SSP;
+					flag &= ~(RGN_SP|RGN_SSP);
 					break;
 				}
 			}

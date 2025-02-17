@@ -1,0 +1,282 @@
+// Temp Reset Guru
+//============================================================
+office,133,32,3	script	Reset Guru	124,{
+	mes "[Reset Guru]";
+	mes "I'm a member of the Somatologist";
+	mes "Academy sent here to provide";
+	mes "Stat and Skill Reset services.";
+	mes "Please select the service you want:";
+	next;
+	set .@i,(select("Reset Skills:Reset Stats:Cancel"));
+	switch (.@i) {
+	case 3:
+		mes "[Reset Guru]";
+		mes "Okay, suit yourself.";
+		close;
+	case 1:
+		sc_end_class;
+		ResetSkill;
+		break;
+	case 2:
+		ResetStatus;
+	}
+	mes "[Reset Guru]";
+	mes "There you go!";
+	close;
+}
+
+// Custom Kafras
+//============================================================
+prontera,149,174,6	script	Kafra Employee::kaf_prontera0	117,{
+	cutin "kafra_01",2;
+	callfunc "F_KafSet";
+	mes "[Kafra Employee]";
+	mes "Welcome to the";
+	mes "Kafra Corporation.";
+	mes "The Kafra services";
+	mes "are always on your side.";
+	mes "How may I assist you?";
+	callfunc "F_Kafra",5,0,0,40,800;
+	savepoint "prontera",155,180;
+	callfunc "F_KafEnd",0,1,"in the city of Prontera";
+}
+
+xmas,148,134,4	script	Kafra Employee::xmas	115,{
+	cutin "kafra_03",2;
+	callfunc "F_KafSet";
+	mes "[Kafra Employee]";
+	mes "With our many Kafra";
+	mes "service locations, you're never";
+	mes "far from home.";
+	callfunc "F_Kafra",5,9,1,40,800;
+	callfunc "F_KafEnd",0,1,"in the town of Lutie";
+}
+
+hugel,88,168,5	script	Kafra Employee::hugel	115,{
+	cutin "kafra_03",2;
+	callfunc "F_Kafra",0,3,1,40,800;
+	savepoint "hugel",96,155;
+	callfunc "F_KafEnd",0,1,"in the village of Hugel";
+}
+
+rachel,109,138,5	script	Kafra Employee::rachel	860,{
+	cutin "kafra_08",2;
+	callfunc "F_KafSet";
+	mes "[Kafra Employee]";
+	mes "With our many Kafra";
+	mes "service locations, you're never";
+	mes "far from home.";
+	callfunc "F_Kafra",5,0,1,40,800;
+	savepoint "rachel",113,137;
+	callfunc "F_KafEnd",0,1,"in the town of Rachel";
+}
+
+veins,208,128,5	script	Kafra Employee::veins	861,{
+	cutin "kafra_09",2;
+	callfunc "F_KafSet";
+	mes "[Kafra Employee]";
+	mes "With our many Kafra";
+	mes "service locations, you're never";
+	mes "far from home.";
+	callfunc "F_Kafra",5,0,1,40,800;
+	savepoint "rachel",204,103;
+	callfunc "F_KafEnd",0,1,"in the town of Veins";
+}
+
+// Duped Inns
+//======================== Comodo ====================================
+cmd_in02,146,180,4	script	Kafra Employee#cmd	721,{
+	cutin "kafra_07",2;
+	mes "[Kafra Misty]";
+	mes "Welcome to the";
+	mes "Kafra Corp. West Branch.";
+	mes "You know that our";
+	mes "service is always";
+	mes "on your side~";
+	next;
+	switch(select("Save:Take a Rest -> 5000 z:Cancel")) {
+	case 1:
+		mes "[Kafra Misty]";
+		mes "Your respawn point";
+		mes "has been saved here.";
+		mes "Thank you,";
+		mes "please come again.";
+		savepoint "cmd_in02",145,176;
+		break;
+	case 2:
+		if (countitem(6593) > 0) {
+			mes "[Kafra Misty]";
+			mes "Do you want to use your";
+			mes getitemname(6593)+"^000000";
+			mes "as the payment option?";
+			next;
+			if (select("Yes:No") == 1)
+				.@tix = 1;
+		}
+		mes "[Kafra Misty]";
+		if (.@tix)
+			delitem 6593,1;
+		else {
+			if(Zeny < 5000){
+				mes "I'm sorry, but the";
+				mes "service charge is";
+				mes "5000 zeny. Please make";
+				mes "sure that you have";
+				mes "enough money to check";
+				mes "in next time, okay?";
+				close2;
+				cutin "", 255;
+				end;
+			}
+			set Zeny,Zeny - 5000;
+		}
+		mes "Thank you.";
+		mes "I hope you";
+		mes "enjoy your rest~";
+		close2;
+		percentheal 100,100;
+		sc_start SC_BLESSING,1800000,10;
+		sc_start SC_INCREASEAGI,1800000,10;
+		warp "cmd_in02",156,208;
+		break;
+	case 3:
+		mes "[Kafra Misty]";
+		mes "The Kafra Corporation";
+		mes "Western Division promises";
+		mes "the best quality service that";
+		mes "emphasizes reliability, and";
+		mes "total consumer satisfaction.";
+		mes "Thank you for your patronage~";
+		break;
+	}
+	close2;
+	cutin "", 255;
+	end;
+}
+
+//======================== Einbroch ====================================
+ein_in01,206,224,3	script	Hotel Employee#ein2	855,{
+	mes "[Hotel Employee]";
+	mes "Good day, welcome to the";
+	mes "Einbroch Hotel. The staff is";
+	mes "always striving to accommodate";
+	mes "our guests with the highest";
+	mes "standards in cleanliness,";
+	mes "service and convenience~";
+	next;
+	if (kain_ticket == 5) {
+		mes "[Hotel Employee]";
+		mes "Are you looking";
+		mes "for Mr. Defru Ark?";
+		mes "Oh right, he did mention";
+		mes "waiting for some package";
+		mes "from the Airport. Now let";
+		mes "me pull up that information...";
+		next;
+		mes "[Hotel Employee]";
+		mes "Ah, here we are.";
+		mes "Mr. Defru Ark is";
+		mes "staying in Room 201.";
+		next;
+	}
+	else {
+		switch(select("Save:Take Rest - 5,000 zeny:Cancel")) {
+		case 1:
+			mes "[Hotel Employee]";
+			mes "Your Respawn Point";
+			mes "has been saved here";
+			mes "in the Einbroch Hotel.";
+			mes "Thank you, and please";
+			mes "come again.";
+			close2;
+			savepoint "ein_in01",200,224,1,1;
+			end;
+		case 2:
+			if (countitem(6593) > 0) {
+				mes "[Hotel Employee]";
+				mes "Do you want to use your";
+				mes getitemname(6593)+"^000000";
+				mes "as the payment option?";
+				next;
+				if (select("Yes:No") == 1)
+					.@tix = 1;
+			}
+			mes "[Hotel Employee]";
+			if (.@tix)
+				delitem 6593,1;
+			else {
+				if(Zeny < 5000){
+					mes "I'm sorry, but the";
+					mes "accommodation fee is";
+					mes "5,000 zeny. Next time,";
+					mes "please make sure that you";
+					mes "bring enough zeny, okay?";
+					close;
+				}
+				set Zeny,Zeny - 5000;
+			}
+			mes "Thank you.";
+			mes "Please enjoy";
+			mes "your rest~";
+			close2;
+			percentheal 100,100;
+			sc_start SC_INCREASEAGI,1800000,10;
+			sc_start SC_BLESSING,1800000,10;
+			warp "ein_in01",272,167;
+			end;
+		case 3:
+			mes "[Hotel Employee]";
+			mes "Thank you and";
+			mes "please come again~";
+			close;
+		}
+	}
+	mes "[Hotel Employee]";
+	mes "Have a good day.";
+	close;
+}
+
+
+//======================== Gonryun ====================================
+gon_in,154,35,4	script	Inn Employee#gon	53,{
+
+	callfunc "F_InnMaid","[Inn Employee]","Kunlun Pub","gon_in",159,32;
+	warp "gon_in",174,88; end;
+}
+
+//======================== Morocc ====================================
+morocc_in,80,100,4	script	Inn Employee#moc1	53,{
+
+	callfunc "F_InnMaid","[Inn Employee]","Morocc Inn","morocc_in",80,95;
+	warp "morocc_in",78,120; end;
+}
+morocc_in,147,141,4	script	Inn Employee#moc2	53,{
+
+	callfunc "F_InnMaid","[Inn Employee]","Morocc Inn","morocc_in",141,136;
+	warp "morocc_in",172,135; end;
+}
+//======================== Izlude ====================================
+izlude_in,175,124,1	script	Inn Employee#izl	53,{
+
+	callfunc "F_InnMaid","[Inn Employee]","Swordman Hall","izlude_in",169,121;
+	warp "izlude_in",170,165; end;
+}
+
+//======================== Juno ====================================
+yuno_in01,33,179,4	script	Inn Employee#juno	53,{
+
+	callfunc "F_InnMaid","[Inn Employee]","Vandt's Pub","yuno_in01",35,174;
+	warp "yuno_in01",112,173; end;
+}
+
+//======================== Lutie ====================================
+xmas_in,174,170,1	script	Inn Employee#xmas	53,{
+
+	callfunc "F_InnMaid","[Inn Employee]","Lutie Inn","xmas_in",171,171;
+	warp "xmas_in",159,174; end;
+}
+
+
+//Prontera Office
+prontera,168,168,0	warp	prtcus00	2,2,office,126,39
+office,126,43,0	warp	prtcus01	2,2,prontera,165,168

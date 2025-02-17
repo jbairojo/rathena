@@ -696,6 +696,7 @@ struct Battle_Config
 	int pet_legacy_formula;
 	int pet_distance_check;
 	int pet_hide_check;
+	int arealoot_range;
 
 	// 4th Jobs Stuff
 	int trait_points_job_change;

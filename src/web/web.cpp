@@ -476,7 +476,6 @@ bool WebServer::initialize( int argc, char* argv[] ){
 
 		if (http_server->is_running())
 			break;
-		ShowDebug("Web server not running, sleeping 1 second.\n");
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 

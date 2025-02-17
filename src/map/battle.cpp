@@ -4204,8 +4204,9 @@ static int battle_calc_attack_skill_ratio(struct Damage* wd, struct block_list *
 #ifdef RENEWAL
 			skillratio += 10 + 40 * skill_lv;
 #else
-			skillratio += 25 + 25 * skill_lv;
+			skillratio += 75 + 25 * skill_lv;
 #endif
+			clif_specialeffect(src, EF_BASH, AREA);
 			break;
 		case CH_TIGERFIST:
 #ifdef RENEWAL
@@ -10256,6 +10257,7 @@ static const struct _battle_data {
 	{ "pet_legacy_formula",                 &battle_config.pet_legacy_formula,              0,      0,      1,              },
 	{ "pet_distance_check",                 &battle_config.pet_distance_check,              5,      0,      50,             },
 	{ "pet_hide_check",                     &battle_config.pet_hide_check,                  1,      0,      1,              },
+	{ "arealoot_range",						&battle_config.arealoot_range,					3,		1,		10,			    },
 
 	// 4th Job Stuff
 	{ "use_traitpoint_table",               &battle_config.use_traitpoint_table,            1,      0,      1,              },

@@ -12247,7 +12247,11 @@ BUILDIN_FUNC(sc_start)
 	struct block_list* bl;
 	enum sc_type type;
 	int val1, val2, val3, val4=0, rate, flag;
+<<<<<<< Updated upstream
 	t_tick tick;
+=======
+	int64 tick;
+>>>>>>> Stashed changes
 	char start_type;
 	const char* command = script_getfuncname(st);
 

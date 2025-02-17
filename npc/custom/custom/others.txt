@@ -1,0 +1,38 @@
+-	script	AllDropInject	-1,{
+OnInit:
+	query_sql("SELECT `ID` FROM `mob_db` UNION SELECT `ID` FROM `mob_db`;", .@mob_ids);
+	.@len = getarraysize(.@mob_ids);
+	freeloop(1);
+	for(.@a = 0; .@a < .@len; .@a++) {
+		addmonsterdrop .@mob_ids[.@a],6734,50; //Copper Coin at 0.50% drop...
+	}
+	freeloop(0);
+	end;
+}
+
+-	script	HourlyPoints	-1,{
+OnInit:
+	.Kpoints = 10;
+	.OnMinute = 60;
+	.npc_name$ = strnpcinfo(3);
+	end;
+
+OnPointGet:
+	#HourlyPoints++;
+	switch ( #HourlyPoints ) {
+		default:
+			break;
+		case 60:
+			#HourlyPoints = -1;
+			#KAFRAPOINTS = #KAFRAPOINTS + .Kpoints;
+			dispbottom "You received "+.Kpoints+" Kafra points. Total of "+#KAFRAPOINTS+" points.",0x00ff00;
+			deltimer .npc_name$+"::OnPointGet";
+			break;
+	}
+
+OnPCLoginEvent:
+	if ( #HourlyPoints < .OnMinute ) {
+		addtimer (1000*60),.npc_name$+"::OnPointGet";
+	}
+	end;
+}

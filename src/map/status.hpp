@@ -3200,8 +3200,13 @@ struct sc_display_entry {
 struct status_change_entry {
 	int timer;
 	int val1,val2,val3,val4;
+<<<<<<< Updated upstream
 	int tick_timer; // Timer for the next interval based timer execution
 	t_tick tick_total; // Total amount of time the status is active for
+=======
+	int tick_timer;
+	t_tick tick_total;
+>>>>>>> Stashed changes
 };
 
 ///Status change

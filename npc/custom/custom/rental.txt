@@ -1,0 +1,195 @@
+// Rental Items NPC
+//============================================================
+-	shop	rent_npc1	-1,512:-1
+-	shop	rent_npc2	-1,512:-1
+-	shop	rent_npc3	-1,512:-1
+-	shop	rent_npc4	-1,512:-1
+-	shop	rent_npc5	-1,512:-1
+office,133,35,2	script	Rental Manager::Rental	952,{
+	mes "[Rental Manager]";
+	mes "Welcome!";
+	mes "Needing to rent a certain item?";
+	mes "Here's a list of items you can";
+	mes "exchange for Bronze Coins!";
+	next;
+	set @s, select("Weapons:Armors:Accessories:Headgears:Costumes:Miscellaneous:Non-rentals:Cancel");
+	if (@s < 6) {
+		mes "[Rental Manager]";
+		mes "All rental items listed will expire in";
+		mes "^FF0000(7) days^000000, but you will receive warning";
+		mes "messages in the chat window before";
+		mes "the item disappears. All rental items";
+		mes "are ^FF0000Character Bound^000000.";
+		next;
+		callshop "rent_npc"+@s,1;
+		npcshopattach "rent_npc"+@s;
+		end;
+	} else if (@s == 6) {
+		mes "[Rental Manager]";
+		mes "All rental items listed will expire in";
+		mes "^FF0000(n) days^000000, but you will receive warning";
+		mes "messages in the chat window before";
+		mes "the item disappears. All rental items";
+		mes "are ^FF0000Character Bound^000000.";
+		next;
+		while (1) {
+			setarray .@dura, 7,14,30,1;
+			setarray .@item, 12622,12622,12622,12887;
+			setarray .@cost, 0,0,0,100000;
+			setarray .@coin, 60,125,275,100;
+			setarray .@rent, 604800,1209600,2592000,86400;
+			for (.@size = getarraysize(.@item); .@i < .@size; .@i++)
+				.@menu$ = .@menu$ + getitemname(.@item[.@i])+"("+.@dura[.@i]+"d) - "+.@coin[.@i]+" C "+(!.@cost[.@i]?"":"+ 100k z")+""+":";
+			.@m = select(.@menu$)-1;
+			mes "[Rental Manager]";
+			if (countitem(6734) < .@coin[.@m]) {
+				mes "I'm sorry, but you don't";
+				mes "have enough Bronze Coins.";
+				close;
+			} else if (Zeny < .@cost[.@m]) {
+				mes "[Rental Manager]";
+				mes "I'm sorry, but you don't";
+				mes "have enough zeny.";
+				close;
+			}
+			mes callfunc("itemlink",.@item[.@m])+" ("+.@dura[.@m]+"d)";
+			mes "Upon renting, item will be";
+			mes "^FF0000Available for ("+.@dura[.@m]+") day"+(!.@cost[.@m]?"s":"")+"^000000, and";
+			mes "will be ^FF0000Character Bound^000000.";
+			next;
+			if (select("Accept Terms:Cancel") == 2) break;
+			mes "[Rental Manager]";
+			mes "Here's your ^0000FF"+getitemname(.@item[.@m])+"^000000 ("+.@dura[.@m]+"d).";
+			mes "Do you need anything else?";
+			rentitem .@item[.@m],.@rent[.@m];
+			delitem 6734,.@coin[.@m];
+			next;
+		}
+	} else if (@s == 7) {
+		mes "[Rental Manager]";
+		mes "All items listed will not expire";
+		mes "but are ^FF0000Character Bound^000000.";
+		next;
+		while (1) {
+			setarray .@item, 12466,12467,12442,12265,12461,12460,23012,12439,6286,12103;
+			setarray .@cost, 1000,1000,5000,50000,10000,10000,10000,100000,180000,3000000;
+			setarray .@coin, 1,1,5,5,15,15,15,100,150,500;
+			for (.@size = getarraysize(.@item); .@i < .@size; .@i++)
+				.@menu$ = .@menu$ + getitemname(.@item[.@i]) + " - "+.@coin[.@i]+" C + "+(.@cost[.@i]>999999?""+.@cost[.@i]/1000000+"m":""+.@cost[.@i]/1000+"k")+" z"+":";
+			.@m = select(.@menu$)-1;
+			mes "[Rental Manager]";
+			if (countitem(6734) < .@coin[.@m]) {
+				mes "I'm sorry, but you don't";
+				mes "have enough Bronze Coins.";
+				close;
+			} else if (Zeny < .@cost[.@m]) {
+				mes "[Rental Manager]";
+				mes "I'm sorry, but you don't";
+				mes "have enough zeny.";
+				close;
+			}
+			mes "How many would you like?";
+			next;
+			input .@input;
+			if (.@input > 100) {
+				mes "[Rental Manager]";
+				mes "I'm sorry, but you can";
+				mes "only buy up to 100 of";
+				mes "these items at a time.";
+				close;
+			}
+			else if (set(.@total_po, .@input * .@cost[.@m]) > Zeny) {
+				mes "[Rental Manager]";
+				mes "I'm sorry, but you don't";
+				mes "have enough zeny.";
+				close;
+			} else if ( set(.@total_co, .@input * .@coin[.@m]) > countitem(6734)) {
+				mes "[Rental Manager]";
+				mes "I'm sorry, but you don't";
+				mes "have enough Bronze Coins.";
+				close;
+			} else if (.@input > 0) {
+				mes "[Rental Manager]";
+				if (.@input == 1) 
+					mes "Here's your ^0000FF"+getitemname(.@item[.@m])+"^000000.";
+				else {
+					mes "Here you are, this is exactly";
+					mes  "^0000FF"+callfunc("F_InsertPlural",.@input,getitemname(.@item[.@m]))+"^000000.";
+				}
+				mes "Do you need anything else?";
+				Zeny = Zeny-.@total_po;
+				delitem 6734,.@total_co;
+				getitem .@item[.@m],.@input;
+				next;
+			}
+		}
+	}
+	mes "[Rental Manager]";
+	mes "You changed your mind?";
+	mes "Alright, feel free to come";
+	mes "back to me whenever you want";
+	mes "to buy or rent something.";
+	close;
+
+OnBuyItem:
+	set .@i,0;
+	while (.@i < getarraysize(@bought_nameid)) {
+		set .@j, 0;
+		while (.@j < getarraysize(getd(".Shop"+@s))) {
+			if(getd(".Shop"+@s+"["+.@j+"]") == @bought_nameid[.@i]) {
+				set @itemcost, (getd(".Shop"+@s+"["+(.@j+1)+"]") * @bought_quantity[.@i]);
+				set @totalcost, @totalcost + @itemcost;
+				break; }
+			set .@j, .@j+2; }
+		set .@i, .@i+1; }
+	if (@totalcost > countitem(.Currency[@s])) dispbottom "You don't have enough "+getitemname(.Currency[@s])+"s.",0xFF0000;
+	else {
+		set .@i,0;
+		while (.@i < getarraysize(@bought_nameid)) {
+			rentitem @bought_nameid[.@i], 604800;
+			set .@i, .@i+1; }
+		delitem .Currency[@s], @totalcost; }
+	set @totalcost, 0;
+	deletearray @bought_nameid[0], 128;
+	deletearray @bought_quantity[0], 128;
+	end;
+
+OnInit:
+	setarray .Currency[1], 6734,6734,6734,6734,6734;
+	setarray .Shop1[0], 1374,40,1373,60,1378,60,1372,60,1388,110,					//Axe
+						1567,60,1578,60,1563,60,1580,110,							//Book
+						1728,110,1744,110,1729,110,									//Bow
+						13023,40,13022,40,13026,40,13021,175,13025,175,13024,175,	//Dagger
+						1929,110,													//Instrument
+						1274,60,1273,110,1286,110,1283,110,1267,175,				//Katar
+						1817,60,1828,60,1829,110,									//Knuckle
+						1534,40,1547,60,1537,60,16002,175,							//Mace
+						1424,60,1427,60,1419,110,1487,60,							//Spear
+						1642,40,1623,60,1628,60,1638,175,							//Staff
+						13402,40,13401,60,13403,60,13408,175,13409,175,13407,175,	//Sword
+						1173,60,1174,175,
+						1982,60,1983,110;											//Whip
+	setarray .Shop2[0], 2385,40,2439,60,2543,110,2535,175;
+	setarray .Shop3[0], 2693,40,2689,40,2692,40,2691,40,2690,40,2694,40,2710,60,2688,60,2695,60,2711,60,2696,60,2697,60,2698,60,2699,60,
+						2753,110,2760,110,2756,110,2755,110,2759,110,2762,110,2758,110,2754,110,2757,110,2761,110;
+	setarray .Shop4[0], 5265,40,5266,40,5331,40,5279,40,5268,40,5326,175;
+	setarray .Shop5[0], 19581,25,20070,25,20197,25,19787,25,19728,25,19589,25,19718,25,19602,25,19603,25,
+						19604,25,20196,25,20198,25,19696,25,20195,25,19661,25,19776,25,31252,25,
+						20341,25,20355,25,20351,25,20354,25,20352,25,20353,25,20356,25,20350,25,
+						31067,25,31063,25,31069,25,31066,25,31070,25,31064,25,31068,25,31065,25,
+						31083,25,31079,25,31085,25,31082,25,31086,25,31080,25,31084,25,31081,25,
+						31075,25,31071,25,31077,25,31074,25,31078,25,31072,25,31076,25,31073,25;
+	set .@i,1;
+	while (.@i <= getarraysize(.Currency)) {
+		set .@j,0;
+		while (.@j < getarraysize(getd(".Shop"+.@i))) {
+			npcshopdelitem "rent_npc"+.@i,512;
+			npcshopadditem "rent_npc"+.@i, getd(".Shop"+.@i+"["+.@j+"]"), getd(".Shop"+.@i+"["+(.@j+1)+"]");
+			set .@j, .@j+2; }
+		set .@i, .@i+1; }
+	end;
+}
+
+function	script	itemlink	{ // getarg(0) : item id
+	return "<ITEM>"+getitemname(getarg(0))+"<INFO>"+getarg(0)+"</INFO></ITEM>";
+}

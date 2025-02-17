@@ -1605,7 +1605,20 @@ int skill_additional_effect(struct block_list* src, struct block_list *bl, uint1
 #ifdef RENEWAL
 		status_zap(bl, 0, 2 * skill_lv + 10); // !TODO: How does caster's DEX/AGI play a role?
 #else
+<<<<<<< Updated upstream
 		status_zap(bl, 0, rate);
+=======
+	case DC_UGLYDANCE: {
+		int rate = 5 + 5 * skill_lv;
+		int skill = pc_checkskill( sd, DC_DANCINGLESSON );
+
+		if( skill > 0 ){
+			rate += 5 + skill;
+		}
+		
+		sc_start(src,bl,SC_BLIND,rate,skill_lv,skill_get_time(skill_id,skill_lv));
+		} break;
+>>>>>>> Stashed changes
 #endif
 		break;
 	case SL_STUN:
